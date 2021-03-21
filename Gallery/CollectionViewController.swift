@@ -10,7 +10,9 @@ import UIKit
 private let reuseIdentifier = "Cell"
 
 class CollectionViewController: UICollectionViewController {
-
+    
+    var Images = [Users]()
+    var photos = [UIImage]()
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -21,6 +23,30 @@ class CollectionViewController: UICollectionViewController {
         self.collectionView!.register(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
 
         // Do any additional setup after loading the view.
+        downloadJson(completed: onSuccess(_:), errorblock: onError(_:))
+       
+    }
+    func getImg() {
+        for i in 0..<Images.count {
+             let link = Images[i].avatar_url
+            let url = URL(string:link)!
+                downloadImage(from: url)
+            
+        }
+            
+    }
+    
+    func onSuccess(_ users:[Users]) {
+        self.Images = users
+       
+        print(Images)
+
+        getImg()
+    
+    }
+    
+    func onError(_ error: Error) {
+        print(error)
     }
 
     /*
@@ -84,5 +110,50 @@ class CollectionViewController: UICollectionViewController {
     
     }
     */
+    
+    func downloadJson(completed: @escaping ([Users]) -> (), errorblock: @escaping ( (Error) -> () )) {
+            let url = URL(string:"https://api.github.com/users")
+            URLSession.shared.dataTask(with: url!) { (data, response, error) in
+                if let error = error {
+                    DispatchQueue.main.async{
+                        errorblock(error)
+                    }
+                } else {
+                    do {
+                        let users = try JSONDecoder().decode([Users].self, from: data!)
+                        DispatchQueue.main.async{
+                            completed(users)
+                        }
+                    } catch let error {
+                        print("JSON Error")
+                        DispatchQueue.main.async{
+                            errorblock(error)
+                        }
+                    }
+
+                }
+                
+            }.resume()
+        }
+        
+    func getData(from url: URL, completion: @escaping (Data?, URLResponse?, Error?) -> ()) {
+        URLSession.shared.dataTask(with: url, completionHandler: completion).resume()
+    }
+    func downloadImage(from url: URL) {
+        print("Download Started")
+        getData(from: url) { data, response, error in
+            guard let data = data, error == nil else { return }
+            print(response?.suggestedFilename ?? url.lastPathComponent)
+            print("Download Finished")
+            DispatchQueue.main.async() { [weak self] in
+                let img = UIImage(data: data)
+            }
+        }
+        
+    }
+
+   
+    
+
 
 }

@@ -11,7 +11,7 @@ private let reuseIdentifier = "Cell"
 
 class CollectionViewController: UICollectionViewController {
     
-    var users = [Users]()
+    var users = [User]()
 
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
@@ -20,7 +20,7 @@ class CollectionViewController: UICollectionViewController {
         downloadJson(completed: onSuccess(_:), errorblock: onError(_:))
     }
     
-    func onSuccess(_ users:[Users]) {
+    func onSuccess(_ users:[User]) {
         self.users = users
         collectionView.reloadData()
     }
@@ -46,7 +46,7 @@ class CollectionViewController: UICollectionViewController {
 
     // MARK: UICollectionViewDelegate
 
-    func downloadJson(completed: @escaping ([Users]) -> (), errorblock: @escaping ( (Error) -> () )) {
+    func downloadJson(completed: @escaping ([User]) -> (), errorblock: @escaping ( (Error) -> () )) {
             let url = URL(string:"https://api.github.com/users")
             URLSession.shared.dataTask(with: url!) { (data, response, error) in
                 if let error = error {
@@ -55,7 +55,7 @@ class CollectionViewController: UICollectionViewController {
                     }
                 } else {
                     do {
-                        let users = try JSONDecoder().decode([Users].self, from: data!)
+                        let users = try JSONDecoder().decode([User].self, from: data!)
                         DispatchQueue.main.async{
                             completed(users)
                         }

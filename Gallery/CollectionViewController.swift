@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import CoreData
+
 
 private let reuseIdentifier = "Cell"
 
@@ -13,7 +15,7 @@ class CollectionViewController: UICollectionViewController {
     
     var users = [User]()
 
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,6 +25,7 @@ class CollectionViewController: UICollectionViewController {
     func onSuccess(_ users:[User]) {
         self.users = users
         collectionView.reloadData()
+        saveUserData(users)
     }
     
     func onError(_ error: Error) {
@@ -42,6 +45,11 @@ class CollectionViewController: UICollectionViewController {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! CollectionViewCell
         cell.imageView.downloaded(from: users[indexPath.row].avatar_url)
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        
+        return CGSize(width: (collectionView.frame.width-16)/2 , height: (collectionView.frame.height-32)/3)
     }
 
     // MARK: UICollectionViewDelegate
@@ -70,6 +78,23 @@ class CollectionViewController: UICollectionViewController {
                 
             }.resume()
         }
+    
+    func saveUserData(_ users: [User]) {
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        for User in users {
+            do {
+            let newUser = NSEntityDescription.insertNewObject(forEntityName: "Person", into: context)
+            newUser.setValue(User.id, forKey: "idtag")
+            newUser.setValue(User.avatar_url, forKey: "imagelink")
+            newUser.setValue(User.login, forKey: "username")
+            try context.save()
+            print("Success")
+            } catch {
+                print("Error saving: \(error)")
+            }
+        }
+    }
+    
 }
 
 extension UIImageView {
@@ -91,4 +116,8 @@ extension UIImageView {
         guard let url = URL(string: link) else { return }
         downloaded(from: url, contentMode: mode)
     }
+}
+
+extension CollectionViewController : UICollectionViewDelegateFlowLayout {
+    
 }

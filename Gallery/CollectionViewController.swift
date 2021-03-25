@@ -21,10 +21,29 @@ class CollectionViewController: UICollectionViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-       // downloadJson(completed: onSuccess(_:), errorblock: onError(_:))
+        let gesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressGesture))
+        collectionView?.addGestureRecognizer(gesture)
         fetchData()
         collectionView.reloadData()
     }
+    @objc func handleLongPressGesture(_ gesture: UILongPressGestureRecognizer){
+        guard let collectionView = collectionView else {
+            return
+        }
+        switch gesture.state {
+        case .began:
+            guard let  targetIndexPath = collectionView.indexPathForItem(at: gesture.location(in: collectionView)) else {
+                return
+            }
+            collectionView.beginInteractiveMovementForItem(at: targetIndexPath)
+        case .changed:
+            collectionView.updateInteractiveMovementTargetPosition(gesture.location(in: collectionView))
+        case .ended:
+            collectionView.endInteractiveMovement()
+        default:
+            collectionView.cancelInteractiveMovement()
+        }
+     }
     
 //    func onSuccess(_ users:[User]) {
 //        saveUserData(users)
@@ -56,6 +75,8 @@ class CollectionViewController: UICollectionViewController {
                 collectionView?.deleteItems(at: [indexPath])
                 self?.downloadJson { (_ users: [User]) in
                     self?.saveUserData(users)
+                    self?.fetchData()
+                    collectionView?.reloadData()
                 } errorblock: { (Error) in
                     print("error\(Error)")
                 }
@@ -80,7 +101,7 @@ class CollectionViewController: UICollectionViewController {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         
-        return CGSize(width: (collectionView.frame.width-16)/2 , height: (collectionView.frame.height-32)/3)
+        return CGSize(width: collectionView.frame.size.width/3.2, height: collectionView.frame.size.width/3.2)
     }
     
     override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -91,11 +112,31 @@ class CollectionViewController: UICollectionViewController {
         }
         return UICollectionReusableView()
     }
+    override func collectionView(_ collectionView: UICollectionView, canMoveItemAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    override func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        let item = myUsers.remove(at: sourceIndexPath.row)
+        myUsers.insert(item, at: destinationIndexPath.row)
+    }
+    
 
     // MARK: UICollectionViewDelegate
-
+    
     func downloadJson(completed: @escaping ([User]) -> (), errorblock: @escaping ( (Error) -> () )) {
-            let url = URL(string:"https://api.github.com/users")
+        guard myUsers.count != 0 else {
+            return
+        }
+//            func getUrl() -> String {
+//            if myUsers.count == 0 {
+//                let url = "https://api.github.com/users"
+//                return url
+//            } else{
+//                let url = "https://api.github.com/users?since=\(myUsers.last?.id as! Int)&per_Page=10"
+//                return url
+//            }
+//            }
+        let url = URL(string: "https://api.github.com/users?since=\(myUsers.last?.id as! Int)&per_Page=10")
             URLSession.shared.dataTask(with: url!) { (data, response, error) in
                 if let error = error {
                     DispatchQueue.main.async{

@@ -30,21 +30,24 @@
                                     <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="trailing" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0Lo-vK-QmU">
-                                            <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
-                                            <state key="normal" title="Button" image="plus" catalog="system"/>
+                                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0Lo-vK-QmU">
+                                            <rect key="frame" x="4" y="4" width="120" height="120"/>
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="120" id="cVO-FG-1uo"/>
+                                                <constraint firstAttribute="width" constant="120" id="xpJ-FY-MM2"/>
+                                            </constraints>
+                                            <state key="normal" image="Plus_symbol"/>
                                             <connections>
                                                 <action selector="reloadButton:" destination="mKj-ac-Hqb" eventType="touchUpInside" id="cxo-9z-yw6"/>
                                             </connections>
                                         </button>
                                     </subviews>
                                     <constraints>
-                                        <constraint firstItem="0Lo-vK-QmU" firstAttribute="leading" secondItem="9Fo-Lu-Pmn" secondAttribute="leading" id="2Xs-ZA-h0q"/>
-                                        <constraint firstAttribute="bottom" secondItem="0Lo-vK-QmU" secondAttribute="bottom" id="gCp-aj-59N"/>
-                                        <constraint firstItem="0Lo-vK-QmU" firstAttribute="top" secondItem="9Fo-Lu-Pmn" secondAttribute="top" id="jCW-Od-tDl"/>
-                                        <constraint firstAttribute="trailing" secondItem="0Lo-vK-QmU" secondAttribute="trailing" id="oe0-Kj-Ysn"/>
+                                        <constraint firstItem="0Lo-vK-QmU" firstAttribute="centerX" secondItem="9Fo-Lu-Pmn" secondAttribute="centerX" id="V8E-ii-LK5"/>
+                                        <constraint firstItem="0Lo-vK-QmU" firstAttribute="centerY" secondItem="9Fo-Lu-Pmn" secondAttribute="centerY" id="dks-70-XlD"/>
                                     </constraints>
                                 </collectionViewCellContentView>
+                                <color key="backgroundColor" systemColor="systemPinkColor"/>
                                 <connections>
                                     <outlet property="reloadButton" destination="0Lo-vK-QmU" id="V6P-Be-Ksc"/>
                                 </connections>
@@ -107,12 +110,15 @@
         </scene>
     </scenes>
     <resources>
-        <image name="plus" catalog="system" width="128" height="113"/>
+        <image name="Plus_symbol" width="500" height="600"/>
         <systemColor name="linkColor">
             <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemPinkColor">
+            <color red="1" green="0.17647058823529413" blue="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemYellowColor">
             <color red="1" green="0.80000000000000004" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>

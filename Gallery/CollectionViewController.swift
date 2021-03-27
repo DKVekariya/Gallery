@@ -14,18 +14,20 @@ private let reloadCellReuseIdentifier = "ReloadCell"
 private let reuseViewIdentifier = "SectionHeader"
 
 class CollectionViewController: UICollectionViewController {
-    
-    var users = [User]()
-    var sectonItem = ["section","section"]
-    var myUsers = [User]()
-    
+    var myUsers = [[User](), [User]()]
+   
     override func viewDidLoad() {
         super.viewDidLoad()
         let gesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressGesture))
         collectionView?.addGestureRecognizer(gesture)
-        fetchData()
         collectionView.reloadData()
+       // deleteAllRecords()
+        for index in 0..<myUsers.count{
+            myUsers[index].append(contentsOf: fetchData(section: index))
+
+        }
     }
+    
     @objc func handleLongPressGesture(_ gesture: UILongPressGestureRecognizer){
         guard let collectionView = collectionView else {
             return
@@ -45,60 +47,55 @@ class CollectionViewController: UICollectionViewController {
         }
      }
     
-//    func onSuccess(_ users:[User]) {
-//        saveUserData(users)
-//        fetchData()
-//        self.users = users
-//
-//    }
-//
-//    func onError(_ error: Error) {
-//        print(error)
-//    }
     // MARK: UICollectionViewDataSource
 
     override func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return sectonItem.count
+        return myUsers.count
     }
 
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return myUsers.count + 1
-    }
+        if myUsers[section].count == 0 {
+            return 1
+        } else {
+            return myUsers[section].count+1
+        }
+}
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.row == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reloadCellReuseIdentifier, for: indexPath) as! ReloadCollectionViewCell
             cell.reloadButton.tag = indexPath.section
             cell.buttonTapCallback = { [weak self, weak collectionView] sender in
+                guard let this = self else {
+                    return
+                }
                 print((sender as! UIButton).tag)
                 print("Button taped \(indexPath.section)")
-                collectionView?.deleteItems(at: [indexPath])
-                self?.downloadJson { (_ users: [User]) in
-                    self?.saveUserData(users)
-                    self?.fetchData()
+               // collectionView?.deleteItems(at: [indexPath])
+                this.downloadJson (section: (indexPath.section)){ users  in
+                    this.saveUserData(users, section: (indexPath.section))
+                    let users = this.fetchData(section:(indexPath.section))
+                    this.myUsers[indexPath.section].append(contentsOf: users)
                     collectionView?.reloadData()
                 } errorblock: { (Error) in
                     print("error\(Error)")
                 }
-
+                
+                
             }
             return cell
-        }
-        else {
-            if indexPath.section == 0 {
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! CollectionViewCell
-                cell.imageView.downloaded(from: myUsers[indexPath.row-1].avatar_url )
-                    return cell
+        } else {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! CollectionViewCell
+            if myUsers[indexPath.section].count != 0 {
+                cell.imageView.downloaded(from: myUsers[indexPath.section][indexPath.item-1].avatar_url)
+                return cell
             } else{
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! CollectionViewCell
-                cell.imageView.downloaded(from: myUsers[indexPath.row-1].avatar_url )
-                    return cell
+                return cell
             }
-        
         }
         
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         
         return CGSize(width: collectionView.frame.size.width/3.2, height: collectionView.frame.size.width/3.2)
@@ -107,117 +104,140 @@ class CollectionViewController: UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
 
         if let sectionHeader = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: reuseViewIdentifier, for: indexPath) as? CollectionReusableView{
-            sectionHeader.sectionHeaderNameLable.text = "Section\(indexPath.section)"
+            sectionHeader.sectionHeaderNameLable.text = "Section - \(indexPath.section)"
             return sectionHeader
         }
         return UICollectionReusableView()
     }
     override func collectionView(_ collectionView: UICollectionView, canMoveItemAt indexPath: IndexPath) -> Bool {
-        return true
+        return indexPath.item != 0
     }
     override func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        let item = myUsers.remove(at: sourceIndexPath.row)
-        myUsers.insert(item, at: destinationIndexPath.row)
+        let item = myUsers[sourceIndexPath.section].remove(at: sourceIndexPath.item-1)
+        myUsers[destinationIndexPath.section].insert(item, at: destinationIndexPath.item-1)
     }
     
 
     // MARK: UICollectionViewDelegate
     
-    func downloadJson(completed: @escaping ([User]) -> (), errorblock: @escaping ( (Error) -> () )) {
-        guard myUsers.count != 0 else {
+    func downloadJson(section: Int, completed: @escaping ([User]) -> (), errorblock: @escaping ( (Error) -> () )) {
+        var urlCom = URLComponents(string: "https://api.github.com/users")
+        
+        var queryItem = [URLQueryItem]()
+        if let lastUser = myUsers[section].last {
+            queryItem.append(.init(name: "since", value: String(lastUser.id)))
+        }
+        queryItem.append(.init(name: "per_page", value: String(10)))
+        urlCom?.queryItems = queryItem
+        
+        guard let url = urlCom?.url else {
+            print("Found nil url")
             return
         }
-//            func getUrl() -> String {
-//            if myUsers.count == 0 {
-//                let url = "https://api.github.com/users"
-//                return url
-//            } else{
-//                let url = "https://api.github.com/users?since=\(myUsers.last?.id as! Int)&per_Page=10"
-//                return url
-//            }
-//            }
-        let url = URL(string: "https://api.github.com/users?since=\(myUsers.last?.id as! Int)&per_Page=10")
-            URLSession.shared.dataTask(with: url!) { (data, response, error) in
-                if let error = error {
+        
+        URLSession.shared.dataTask(with: url) { (data, response, error) in
+            if let error = error {
+                DispatchQueue.main.async{
+                    errorblock(error)
+                }
+            } else {
+                do {
+                    let users = try JSONDecoder().decode([User].self, from: data!)
+                    DispatchQueue.main.async{
+                        completed(users)
+                    }
+                } catch let error {
+                    print("JSON Error")
                     DispatchQueue.main.async{
                         errorblock(error)
                     }
-                } else {
-                    do {
-                        let users = try JSONDecoder().decode([User].self, from: data!)
-                        DispatchQueue.main.async{
-                            completed(users)
-                        }
-                    } catch let error {
-                        print("JSON Error")
-                        DispatchQueue.main.async{
-                            errorblock(error)
-                        }
-                    }
-
                 }
                 
-            }.resume()
-        }
+            }
+            
+        }.resume()
+    }
     
     //MARK: CoreData
     //create or save data
-    func saveUserData(_ users: [User]) {
+    func saveUserData(_ users: [User], section: Int) {
         let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
         for user in users {
-            if context.hasChanges {
-                do {
+            do {
                 let newUser = NSEntityDescription.insertNewObject(forEntityName: "Person", into: context)
+                newUser.setValue(section, forKey: "section")
                 newUser.setValue(user.id, forKey: "idtag")
                 newUser.setValue(user.avatar_url, forKey: "imagelink")
                 newUser.setValue(user.login, forKey: "username")
                 try context.save()
                 print("Success")
-                } catch {
-                    print("Error saving: \(error)")
-                }
+            } catch {
+                print("Error saving: \(error)")
             }
         }
     }
     //Fatch core data
-    func fetchData() {
-
+    func fetchData( section: Int) -> [User]{
+        
         let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Person")
-
+        fetchRequest.predicate = NSPredicate(format: "section == %d", section)
+        
         do {
             let result = try context.fetch(fetchRequest) as! [NSManagedObject]
-            
+            var users = [User]()
             for item in result {
+                let section = item.value(forKey: "section") as! Int
                 let idtag = item.value(forKey: "idtag") as! Int
                 let imagePath = item.value(forKey: "imagelink") as! String
                 let username = item.value(forKey: "username") as! String
-                myUsers.append(User(login: username, id: idtag, avatar_url: imagePath))
+                users.append(User(login: username,id: idtag, avatar_url: imagePath, section: section))
             }
+            return users
         }catch let err as NSError {
             print(err.debugDescription)
+            return []
         }
     }
-
-
-
+    
     //Update core data
     //Delete from core data
+    func deleteAllRecords() {
+        let delegate = UIApplication.shared.delegate as! AppDelegate
+        let context = delegate.persistentContainer.viewContext
+        
+        let deleteFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Person")
+        let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetch)
+        
+        do {
+            try context.execute(deleteRequest)
+            try context.save()
+        } catch {
+            print ("There was an error")
+        }
+    }
     
 }
 
 extension UIImageView {
+    static var cache = [URL: UIImage]()
+    
     func downloaded(from url: URL, contentMode mode: UIView.ContentMode = .scaleAspectFit) {
         contentMode = mode
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        if let image = Self.cache[url]{
+            self.image = image
+            return
+        }
+        URLSession.shared.dataTask(with: url) { [url] data, response, error in
             guard
                 let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200,
                 let mimeType = response?.mimeType, mimeType.hasPrefix("image"),
                 let data = data, error == nil,
                 let image = UIImage(data: data)
-                else { return }
+            else { return }
             DispatchQueue.main.async() { [weak self] in
                 self?.image = image
+                Self.cache[url] = image
             }
         }.resume()
     }
@@ -230,3 +250,5 @@ extension UIImageView {
 extension CollectionViewController : UICollectionViewDelegateFlowLayout {
     
 }
+
+

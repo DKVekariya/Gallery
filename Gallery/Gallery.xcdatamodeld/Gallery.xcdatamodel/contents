@@ -3,10 +3,10 @@
     <entity name="Person" representedClassName="Person" syncable="YES" codeGenerationType="class">
         <attribute name="idtag" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="imagelink" optional="YES" attributeType="String" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="section" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="username" optional="YES" attributeType="String"/>
-        <relationship name="group" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Person" inverseName="group" inverseEntity="Person"/>
     </entity>
     <elements>
-        <element name="Person" positionX="492.9649658203125" positionY="1036.734191894531" width="128" height="103"/>
+        <element name="Person" positionX="492.9649658203125" positionY="1036.734191894531" width="128" height="89"/>
     </elements>
 </model>

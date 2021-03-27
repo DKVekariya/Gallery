@@ -16,15 +16,44 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                        <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="VSh-Rh-XR6">
+                        <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="VSh-Rh-XR6">
                             <size key="itemSize" width="128" height="128"/>
                             <size key="headerReferenceSize" width="50" height="50"/>
                             <size key="footerReferenceSize" width="0.0" height="0.0"/>
                             <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                         </collectionViewFlowLayout>
                         <cells>
-                            <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="Cell" id="rLG-Z9-Ux7" customClass="CollectionViewCell" customModule="Gallery" customModuleProvider="target">
+                            <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="ReloadCell" id="mKj-ac-Hqb" customClass="ReloadCollectionViewCell" customModule="Gallery" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="50" width="128" height="128"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="9Fo-Lu-Pmn">
+                                    <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <subviews>
+                                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0Lo-vK-QmU">
+                                            <rect key="frame" x="4" y="4" width="120" height="120"/>
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="120" id="cVO-FG-1uo"/>
+                                                <constraint firstAttribute="width" constant="120" id="xpJ-FY-MM2"/>
+                                            </constraints>
+                                            <state key="normal" image="Plus_symbol"/>
+                                            <connections>
+                                                <action selector="reloadButton:" destination="mKj-ac-Hqb" eventType="touchUpInside" id="cxo-9z-yw6"/>
+                                            </connections>
+                                        </button>
+                                    </subviews>
+                                    <constraints>
+                                        <constraint firstItem="0Lo-vK-QmU" firstAttribute="centerX" secondItem="9Fo-Lu-Pmn" secondAttribute="centerX" id="V8E-ii-LK5"/>
+                                        <constraint firstItem="0Lo-vK-QmU" firstAttribute="centerY" secondItem="9Fo-Lu-Pmn" secondAttribute="centerY" id="dks-70-XlD"/>
+                                    </constraints>
+                                </collectionViewCellContentView>
+                                <color key="backgroundColor" systemColor="systemPinkColor"/>
+                                <connections>
+                                    <outlet property="reloadButton" destination="0Lo-vK-QmU" id="V6P-Be-Ksc"/>
+                                </connections>
+                            </collectionViewCell>
+                            <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" reuseIdentifier="Cell" id="rLG-Z9-Ux7" customClass="CollectionViewCell" customModule="Gallery" customModuleProvider="target">
+                                <rect key="frame" x="143" y="50" width="128" height="128"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="DHp-XP-oQz">
                                     <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
@@ -47,7 +76,7 @@
                                 </connections>
                             </collectionViewCell>
                         </cells>
-                        <collectionReusableView key="sectionHeaderView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="cBs-n4-4hj">
+                        <collectionReusableView key="sectionHeaderView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" reuseIdentifier="SectionHeader" id="cBs-n4-4hj" customClass="CollectionReusableView" customModule="Gallery" customModuleProvider="target">
                             <rect key="frame" x="0.0" y="0.0" width="414" height="50"/>
                             <autoresizingMask key="autoresizingMask"/>
                             <subviews>
@@ -58,12 +87,16 @@
                                     <nil key="highlightedColor"/>
                                 </label>
                             </subviews>
+                            <color key="backgroundColor" systemColor="systemYellowColor"/>
                             <constraints>
                                 <constraint firstItem="moy-m7-KQf" firstAttribute="top" secondItem="cBs-n4-4hj" secondAttribute="topMargin" id="8Xd-gR-Mh5"/>
                                 <constraint firstItem="moy-m7-KQf" firstAttribute="bottom" secondItem="cBs-n4-4hj" secondAttribute="bottomMargin" id="KAG-tA-isf"/>
                                 <constraint firstItem="moy-m7-KQf" firstAttribute="leading" secondItem="cBs-n4-4hj" secondAttribute="leadingMargin" id="cu1-Nr-nTz"/>
                                 <constraint firstAttribute="trailingMargin" secondItem="moy-m7-KQf" secondAttribute="trailing" id="qgW-Cj-c0S"/>
                             </constraints>
+                            <connections>
+                                <outlet property="sectionHeaderNameLable" destination="moy-m7-KQf" id="pF5-WE-pNa"/>
+                            </connections>
                         </collectionReusableView>
                         <connections>
                             <outlet property="dataSource" destination="lQo-Fl-gs6" id="6pU-0M-jvF"/>
@@ -77,11 +110,18 @@
         </scene>
     </scenes>
     <resources>
+        <image name="Plus_symbol" width="500" height="600"/>
         <systemColor name="linkColor">
             <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemPinkColor">
+            <color red="1" green="0.17647058823529413" blue="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemYellowColor">
+            <color red="1" green="0.80000000000000004" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

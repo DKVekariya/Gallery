@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17156" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="lQo-Fl-gs6">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17156" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="jKq-4z-mnJ">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17126"/>
@@ -41,14 +41,19 @@
                                                 <action selector="reloadButton:" destination="mKj-ac-Hqb" eventType="touchUpInside" id="cxo-9z-yw6"/>
                                             </connections>
                                         </button>
+                                        <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="bBW-ij-0gq">
+                                            <rect key="frame" x="54" y="54" width="20" height="20"/>
+                                        </activityIndicatorView>
                                     </subviews>
                                     <constraints>
+                                        <constraint firstItem="bBW-ij-0gq" firstAttribute="centerY" secondItem="9Fo-Lu-Pmn" secondAttribute="centerY" id="BSf-v1-BnA"/>
                                         <constraint firstItem="0Lo-vK-QmU" firstAttribute="centerX" secondItem="9Fo-Lu-Pmn" secondAttribute="centerX" id="V8E-ii-LK5"/>
                                         <constraint firstItem="0Lo-vK-QmU" firstAttribute="centerY" secondItem="9Fo-Lu-Pmn" secondAttribute="centerY" id="dks-70-XlD"/>
+                                        <constraint firstItem="bBW-ij-0gq" firstAttribute="centerX" secondItem="9Fo-Lu-Pmn" secondAttribute="centerX" id="nN3-0D-iJp"/>
                                     </constraints>
                                 </collectionViewCellContentView>
-                                <color key="backgroundColor" systemColor="systemPinkColor"/>
                                 <connections>
+                                    <outlet property="activityIndicator" destination="bBW-ij-0gq" id="lWh-3C-EmB"/>
                                     <outlet property="reloadButton" destination="0Lo-vK-QmU" id="V6P-Be-Ksc"/>
                                 </connections>
                             </collectionViewCell>
@@ -62,17 +67,28 @@
                                         <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="mlK-jR-x1L">
                                             <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
                                         </imageView>
+                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="circle" catalog="system" highlightedImage="checkmark.circle.fill" highlighted="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IYT-VJ-fxI">
+                                            <rect key="frame" x="88" y="0.5" width="40" height="39"/>
+                                            <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" constant="40" id="OcP-Q8-2Rx"/>
+                                                <constraint firstAttribute="height" constant="40" id="cJU-sL-8zk"/>
+                                            </constraints>
+                                        </imageView>
                                     </subviews>
                                     <constraints>
                                         <constraint firstItem="mlK-jR-x1L" firstAttribute="top" secondItem="DHp-XP-oQz" secondAttribute="top" id="L4m-Gk-hXH"/>
                                         <constraint firstAttribute="bottom" secondItem="mlK-jR-x1L" secondAttribute="bottom" id="YvT-bZ-Kxl"/>
+                                        <constraint firstItem="IYT-VJ-fxI" firstAttribute="trailing" secondItem="mlK-jR-x1L" secondAttribute="trailing" id="bg2-Af-C0p"/>
                                         <constraint firstAttribute="trailing" secondItem="mlK-jR-x1L" secondAttribute="trailing" id="fYE-D8-jcp"/>
+                                        <constraint firstItem="IYT-VJ-fxI" firstAttribute="top" secondItem="mlK-jR-x1L" secondAttribute="top" id="k7S-Hn-Llo"/>
                                         <constraint firstItem="mlK-jR-x1L" firstAttribute="leading" secondItem="DHp-XP-oQz" secondAttribute="leading" id="rVs-WN-Bsp"/>
                                     </constraints>
                                 </collectionViewCellContentView>
                                 <color key="backgroundColor" systemColor="linkColor"/>
                                 <connections>
                                     <outlet property="imageView" destination="mlK-jR-x1L" id="wuS-zp-7s2"/>
+                                    <outlet property="selectionIndecatorImageView" destination="IYT-VJ-fxI" id="QL0-s0-qfd"/>
                                 </connections>
                             </collectionViewCell>
                         </cells>
@@ -103,22 +119,55 @@
                             <outlet property="delegate" destination="lQo-Fl-gs6" id="eKl-Gg-nXI"/>
                         </connections>
                     </collectionView>
+                    <navigationItem key="navigationItem" id="1fc-Gw-gPH">
+                        <barButtonItem key="leftBarButtonItem" title="Item" id="ML3-Sj-f8K">
+                            <connections>
+                                <action selector="onLefitemClick:" destination="lQo-Fl-gs6" id="yDP-A2-tM8"/>
+                            </connections>
+                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" systemItem="trash" id="uUu-vp-ZQI">
+                            <connections>
+                                <action selector="onRightItemClick:" destination="lQo-Fl-gs6" id="5U1-0d-alt"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="leftBarItem" destination="ML3-Sj-f8K" id="Cik-Y8-KcS"/>
+                        <outlet property="rightBarItem" destination="uUu-vp-ZQI" id="8xY-V7-9jq"/>
+                    </connections>
                 </collectionViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="NRT-4k-b6H" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="676.81159420289862" y="-579.24107142857144"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="RNc-Q5-HgJ">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="jKq-4z-mnJ" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="5LA-2w-WeA">
+                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="lQo-Fl-gs6" kind="relationship" relationship="rootViewController" id="mao-re-5ZK"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="feA-Jn-3RJ" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-233.33333333333334" y="-579.24107142857144"/>
         </scene>
     </scenes>
     <resources>
         <image name="Plus_symbol" width="500" height="600"/>
+        <image name="checkmark.circle.fill" catalog="system" width="128" height="121"/>
+        <image name="circle" catalog="system" width="128" height="121"/>
         <systemColor name="linkColor">
             <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemPinkColor">
-            <color red="1" green="0.17647058823529413" blue="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemYellowColor">
             <color red="1" green="0.80000000000000004" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>

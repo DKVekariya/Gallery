@@ -14,8 +14,12 @@ private let reloadCellReuseIdentifier = "ReloadCell"
 private let reuseViewIdentifier = "SectionHeader"
 
 class CollectionViewController: UICollectionViewController {
+    @IBOutlet weak var leftBarItem: UIBarButtonItem!
+    @IBOutlet weak var rightBarItem: UIBarButtonItem!
     var myUsers = [[User](), [User]()]
-   
+    var isCollectionEditing = false
+    var selectedItems = [IndexPath]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         let gesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressGesture))
@@ -24,6 +28,7 @@ class CollectionViewController: UICollectionViewController {
        // deleteAllRecords()
         for index in 0..<myUsers.count{
             myUsers[index].append(contentsOf: fetchData(section: index))
+            refreshBarButton()
 
         }
     }
@@ -69,6 +74,8 @@ class CollectionViewController: UICollectionViewController {
                 guard let this = self else {
                     return
                 }
+//                cell.reloadButton.imageView?.isHidden = true  // hide pluse symbole
+//                //cell.reloadButton.isEnabled = false           //disable reload button
                 print((sender as! UIButton).tag)
                 print("Button taped \(indexPath.section)")
                // collectionView?.deleteItems(at: [indexPath])
@@ -87,6 +94,8 @@ class CollectionViewController: UICollectionViewController {
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! CollectionViewCell
             if myUsers[indexPath.section].count != 0 {
+                cell.selectionIndecatorImageView.isHidden = !isCollectionEditing
+                cell.selectionIndecatorImageView.isHighlighted = selectedItems.contains(indexPath)
                 cell.imageView.downloaded(from: myUsers[indexPath.section][indexPath.item-1].avatar_url)
                 return cell
             } else{
@@ -119,7 +128,18 @@ class CollectionViewController: UICollectionViewController {
     
 
     // MARK: UICollectionViewDelegate
-    
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if isCollectionEditing {
+            if let index = selectedItems.firstIndex(of: indexPath) {
+                selectedItems.remove(at: index)
+            } else{
+                selectedItems.append(indexPath)
+            }
+            collectionView.reloadItems(at: [indexPath])
+        }
+
+    }
+    //MARL: Downloading JSON
     func downloadJson(section: Int, completed: @escaping ([User]) -> (), errorblock: @escaping ( (Error) -> () )) {
         var urlCom = URLComponents(string: "https://api.github.com/users")
         
@@ -214,6 +234,63 @@ class CollectionViewController: UICollectionViewController {
             try context.save()
         } catch {
             print ("There was an error")
+        }
+    }
+    
+    func deletUsers(_ deleteList:[User]) {
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Person")
+        
+        let predicates = deleteList.map({ NSPredicate(format: "idtag == %d AND section == %d", $0.id, $0.section! ) })
+        
+//        let idtagPredicate = NSPredicate(format: "idtag == %d AND section == %d", )
+        
+//        let sectionPredicate = NSPredicate(format: "section IN %d", deleteList.compactMap({ $0.section }))
+        
+        fetchRequest.predicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+        
+        do {
+            let objects = try context.fetch(fetchRequest) as! [NSManagedObject]
+            for object in objects {
+                context.delete(object)
+            }
+            try context.save()
+        } catch _ {
+            // error handling
+        }
+    }
+    
+    @IBAction func onLefitemClick(_ sender: Any) {
+        isCollectionEditing.toggle()
+        collectionView.reloadData()
+        selectedItems.removeAll()
+        refreshBarButton()
+    }
+    @IBAction func onRightItemClick(_ sender: Any) {
+        let usersToDelete = selectedItems.map({ myUsers[$0.section][$0.item-1] })
+        
+        for user in usersToDelete where user.section != nil {
+            myUsers[user.section!].removeAll(where: { $0.id == user.id })
+        }
+        
+        deletUsers(usersToDelete)
+        collectionView.performBatchUpdates {
+            collectionView.deleteItems(at: selectedItems)
+        } completion: { _ in
+            self.isCollectionEditing = false
+            self.refreshBarButton()
+            self.collectionView.reloadData()
+        }
+        selectedItems.removeAll()
+    }
+    
+    func refreshBarButton() {
+        if isCollectionEditing == true {
+            leftBarItem.title = "Done"
+            rightBarItem.isEnabled = true
+        } else{
+            leftBarItem.title = "Edit"
+            rightBarItem.isEnabled = false
         }
     }
     

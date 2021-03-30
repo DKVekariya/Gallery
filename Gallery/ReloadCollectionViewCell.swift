@@ -11,9 +11,11 @@ class ReloadCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var reloadButton: UIButton!
     var buttonTapCallback:((Any) -> Void)?
-    var inttypr:Int?
     
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBAction func reloadButton(_ sender: Any) {
+//        activityIndicator.isHidden = false
+//        activityIndicator.startAnimating()
         buttonTapCallback?(sender)
     }
 

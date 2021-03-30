@@ -25,7 +25,7 @@ class CollectionViewController: UICollectionViewController {
         let gesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressGesture))
         collectionView?.addGestureRecognizer(gesture)
         collectionView.reloadData()
-       // deleteAllRecords()
+       //deleteAllRecords()
         for index in 0..<myUsers.count{
             myUsers[index].append(contentsOf: fetchData(section: index))
             refreshBarButton()
@@ -70,20 +70,28 @@ class CollectionViewController: UICollectionViewController {
         if indexPath.row == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reloadCellReuseIdentifier, for: indexPath) as! ReloadCollectionViewCell
             cell.reloadButton.tag = indexPath.section
+            cell.activityIndicator.isHidden = true
+            cell.reloadButton.isHidden = false
             cell.buttonTapCallback = { [weak self, weak collectionView] sender in
                 guard let this = self else {
                     return
                 }
-//                cell.reloadButton.imageView?.isHidden = true  // hide pluse symbole
-//                //cell.reloadButton.isEnabled = false           //disable reload button
+                cell.activityIndicator.isHidden = false
+                cell.reloadButton.isHidden = true
+                cell.activityIndicator.startAnimating()
+                //                cell.reloadButton.imageView?.isHidden = true  // hide pluse symbole
+                //                //cell.reloadButton.isEnabled = false           //disable reload button
                 print((sender as! UIButton).tag)
                 print("Button taped \(indexPath.section)")
-               // collectionView?.deleteItems(at: [indexPath])
+                // collectionView?.deleteItems(at: [indexPath])
                 this.downloadJson (section: (indexPath.section)){ users  in
                     this.saveUserData(users, section: (indexPath.section))
                     let users = this.fetchData(section:(indexPath.section))
                     this.myUsers[indexPath.section].append(contentsOf: users)
                     collectionView?.reloadData()
+                    cell.activityIndicator.stopAnimating()
+                    cell.activityIndicator.isHidden = true
+                    cell.reloadButton.isHidden = false
                 } errorblock: { (Error) in
                     print("error\(Error)")
                 }

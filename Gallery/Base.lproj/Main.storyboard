@@ -3,6 +3,7 @@
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17126"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="collection view cell content view" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -97,21 +98,33 @@
                             <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="moy-m7-KQf">
-                                    <rect key="frame" x="8" y="8" width="398" height="34"/>
+                                    <rect key="frame" x="8" y="8" width="41.5" height="34"/>
                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                     <nil key="textColor"/>
                                     <nil key="highlightedColor"/>
                                 </label>
+                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="p8K-rR-toY">
+                                    <rect key="frame" x="331" y="8" width="75" height="34"/>
+                                    <state key="normal" title="Select All">
+                                        <color key="titleColor" name="AccentColor"/>
+                                    </state>
+                                    <connections>
+                                        <action selector="selectAllCell:" destination="cBs-n4-4hj" eventType="touchUpInside" id="qKy-6r-0hL"/>
+                                    </connections>
+                                </button>
                             </subviews>
                             <color key="backgroundColor" systemColor="systemYellowColor"/>
                             <constraints>
-                                <constraint firstItem="moy-m7-KQf" firstAttribute="top" secondItem="cBs-n4-4hj" secondAttribute="topMargin" id="8Xd-gR-Mh5"/>
-                                <constraint firstItem="moy-m7-KQf" firstAttribute="bottom" secondItem="cBs-n4-4hj" secondAttribute="bottomMargin" id="KAG-tA-isf"/>
-                                <constraint firstItem="moy-m7-KQf" firstAttribute="leading" secondItem="cBs-n4-4hj" secondAttribute="leadingMargin" id="cu1-Nr-nTz"/>
-                                <constraint firstAttribute="trailingMargin" secondItem="moy-m7-KQf" secondAttribute="trailing" id="qgW-Cj-c0S"/>
+                                <constraint firstItem="moy-m7-KQf" firstAttribute="top" secondItem="cBs-n4-4hj" secondAttribute="topMargin" id="DFT-c7-NLe"/>
+                                <constraint firstItem="moy-m7-KQf" firstAttribute="bottom" secondItem="cBs-n4-4hj" secondAttribute="bottomMargin" id="JFg-OP-HaE"/>
+                                <constraint firstItem="p8K-rR-toY" firstAttribute="trailing" secondItem="cBs-n4-4hj" secondAttribute="trailingMargin" id="lVj-5H-OEz"/>
+                                <constraint firstItem="p8K-rR-toY" firstAttribute="top" secondItem="cBs-n4-4hj" secondAttribute="topMargin" id="n5F-t6-XGA"/>
+                                <constraint firstAttribute="bottomMargin" secondItem="p8K-rR-toY" secondAttribute="bottom" id="rWG-zI-NM4"/>
+                                <constraint firstItem="moy-m7-KQf" firstAttribute="leading" secondItem="cBs-n4-4hj" secondAttribute="leadingMargin" id="vmq-yt-9za"/>
                             </constraints>
                             <connections>
                                 <outlet property="sectionHeaderNameLable" destination="moy-m7-KQf" id="pF5-WE-pNa"/>
+                                <outlet property="selectButton" destination="p8K-rR-toY" id="vxa-4g-5NY"/>
                             </connections>
                         </collectionReusableView>
                         <connections>
@@ -163,6 +176,9 @@
         <image name="Plus_symbol" width="500" height="600"/>
         <image name="checkmark.circle.fill" catalog="system" width="128" height="121"/>
         <image name="circle" catalog="system" width="128" height="121"/>
+        <namedColor name="AccentColor">
+            <color red="0.0" green="0.46000000000000002" blue="0.89000000000000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
         <systemColor name="linkColor">
             <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>

@@ -18,7 +18,8 @@ class CollectionViewController: UICollectionViewController {
     @IBOutlet weak var rightBarItem: UIBarButtonItem!
     var myUsers = [[User](), [User]()]
     var isCollectionEditing = false
-    var selectedItems = [IndexPath]()
+    var selectedItems = [IndexPath](), loadingSectionIndexPaths = [IndexPath]()
+    var selectAllSections = [Int]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -69,35 +70,16 @@ class CollectionViewController: UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.row == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reloadCellReuseIdentifier, for: indexPath) as! ReloadCollectionViewCell
+            let isLoading = loadingSectionIndexPaths.contains(indexPath)
             cell.reloadButton.tag = indexPath.section
-            cell.activityIndicator.isHidden = true
-            cell.reloadButton.isHidden = false
-            cell.buttonTapCallback = { [weak self, weak collectionView] sender in
-                guard let this = self else {
-                    return
-                }
-                cell.activityIndicator.isHidden = false
-                cell.reloadButton.isHidden = true
+            cell.activityIndicator.isHidden = !isLoading
+            if isLoading {
                 cell.activityIndicator.startAnimating()
-                //                cell.reloadButton.imageView?.isHidden = true  // hide pluse symbole
-                //                //cell.reloadButton.isEnabled = false           //disable reload button
-                print((sender as! UIButton).tag)
-                print("Button taped \(indexPath.section)")
-                // collectionView?.deleteItems(at: [indexPath])
-                this.downloadJson (section: (indexPath.section)){ users  in
-                    this.saveUserData(users, section: (indexPath.section))
-                    let users = this.fetchData(section:(indexPath.section))
-                    this.myUsers[indexPath.section].append(contentsOf: users)
-                    collectionView?.reloadData()
-                    cell.activityIndicator.stopAnimating()
-                    cell.activityIndicator.isHidden = true
-                    cell.reloadButton.isHidden = false
-                } errorblock: { (Error) in
-                    print("error\(Error)")
-                }
-                
-                
+            } else {
+                cell.activityIndicator.stopAnimating()
             }
+            cell.reloadButton.isHidden = isLoading
+            cell.buttonTapCallback = { [weak self] sender in self?.loadUsersFor(section: indexPath.section) }
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! CollectionViewCell
@@ -121,13 +103,15 @@ class CollectionViewController: UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
 
         if let sectionHeader = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: reuseViewIdentifier, for: indexPath) as? CollectionReusableView{
-            sectionHeader.sectionHeaderNameLable.text = "Section - \(indexPath.section)"
+            sectionHeader.sectionHeaderNameLable.text = "Section - \(indexPath.section + 1)"
+            sectionHeader.buttonTapCallback = {[weak self] sender in self?.selectAllCell(section: indexPath.section)}
+            sectionHeader.selectButton.isHidden = !isCollectionEditing
             return sectionHeader
         }
         return UICollectionReusableView()
     }
     override func collectionView(_ collectionView: UICollectionView, canMoveItemAt indexPath: IndexPath) -> Bool {
-        return indexPath.item != 0
+        return indexPath.item != 0 && !isCollectionEditing
     }
     override func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         let item = myUsers[sourceIndexPath.section].remove(at: sourceIndexPath.item-1)
@@ -147,13 +131,55 @@ class CollectionViewController: UICollectionViewController {
         }
 
     }
+    
+    func loadUsersFor(section:Int) {
+        let indexPath = IndexPath(item: 0, section: section)
+        loadingSectionIndexPaths.append(indexPath)
+        collectionView.reloadItems(at: [indexPath])
+        
+        retrieveUserFor(lastUserId:  myUsers[section].last?.id) { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success(let users):
+                self.saveUserData(users, section: section)
+                self.myUsers[section] = self.fetchData(section: section)
+            case .failure(let runtimeError):
+                print(runtimeError)
+            }
+            if let index = self.loadingSectionIndexPaths.firstIndex(of: indexPath) {
+                self.loadingSectionIndexPaths.remove(at: index)
+            }
+            self.collectionView.reloadData()
+        }
+    }
+    
+    func selectAllCell(section:Int) {
+        guard isCollectionEditing else { return }
+        
+        if selectAllSections.contains(section) {
+            selectAllSections.removeAll(where: { $0 == section })
+            let indexPathToDeselect = (1..<collectionView.numberOfItems(inSection: section)).map({ IndexPath(item: $0, section: section) })
+            selectedItems.removeAll(where: { indexPathToDeselect.contains($0) })
+        } else {
+            selectAllSections.append(section)
+            for index in 1..<collectionView.numberOfItems(inSection: section) {
+                let indexPath = IndexPath(item: index, section: section)
+                if !selectedItems.contains(indexPath) {
+                    selectedItems.append(indexPath)
+                }
+            }
+        }
+        
+        collectionView.reloadSections(IndexSet(integer: section))
+    }
+    
     //MARL: Downloading JSON
-    func downloadJson(section: Int, completed: @escaping ([User]) -> (), errorblock: @escaping ( (Error) -> () )) {
+    func retrieveUserFor(lastUserId:Int?, comppletionBlock: @escaping ((Result<[User], RuntimeError>)) -> Void) {
         var urlCom = URLComponents(string: "https://api.github.com/users")
         
         var queryItem = [URLQueryItem]()
-        if let lastUser = myUsers[section].last {
-            queryItem.append(.init(name: "since", value: String(lastUser.id)))
+        if let id = lastUserId {
+            queryItem.append(.init(name: "since", value: String(id)))
         }
         queryItem.append(.init(name: "per_page", value: String(10)))
         urlCom?.queryItems = queryItem
@@ -166,18 +192,18 @@ class CollectionViewController: UICollectionViewController {
         URLSession.shared.dataTask(with: url) { (data, response, error) in
             if let error = error {
                 DispatchQueue.main.async{
-                    errorblock(error)
+                    comppletionBlock(.failure(.underlyingError(error: error)))
                 }
             } else {
                 do {
                     let users = try JSONDecoder().decode([User].self, from: data!)
                     DispatchQueue.main.async{
-                        completed(users)
+                        comppletionBlock(.success(users))
                     }
                 } catch let error {
                     print("JSON Error")
                     DispatchQueue.main.async{
-                        errorblock(error)
+                        comppletionBlock(.failure(.decodingError(error: error)))
                     }
                 }
                 
@@ -337,3 +363,8 @@ extension CollectionViewController : UICollectionViewDelegateFlowLayout {
 }
 
 
+enum RuntimeError: Error {
+    case connectionError
+    case decodingError(error: Error?)
+    case underlyingError(error:Error?)
+}

@@ -68,9 +68,10 @@ class CollectionViewController: UICollectionViewController {
 }
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if indexPath.row == 0 {
+        if indexPath.item == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reloadCellReuseIdentifier, for: indexPath) as! ReloadCollectionViewCell
             let isLoading = loadingSectionIndexPaths.contains(indexPath)
+            print("isloading", isLoading)
             cell.reloadButton.tag = indexPath.section
             cell.activityIndicator.isHidden = !isLoading
             if isLoading {
@@ -79,7 +80,7 @@ class CollectionViewController: UICollectionViewController {
                 cell.activityIndicator.stopAnimating()
             }
             cell.reloadButton.isHidden = isLoading
-            cell.buttonTapCallback = { [weak self] sender in self?.loadUsersFor(section: indexPath.section) }
+            cell.buttonTapCallback = { [weak self] sender in self?.loadUsersFor(indexPath) }
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! CollectionViewCell
@@ -114,8 +115,18 @@ class CollectionViewController: UICollectionViewController {
         return indexPath.item != 0 && !isCollectionEditing
     }
     override func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        let item = myUsers[sourceIndexPath.section].remove(at: sourceIndexPath.item-1)
-        myUsers[destinationIndexPath.section].insert(item, at: destinationIndexPath.item-1)
+        if sourceIndexPath.section == destinationIndexPath.section {
+            let item = myUsers[sourceIndexPath.section].remove(at: sourceIndexPath.item-1)
+            myUsers[destinationIndexPath.section].insert(item, at: destinationIndexPath.item-1)
+        } else {
+            let item = myUsers[sourceIndexPath.section].remove(at: sourceIndexPath.item-1)
+            //Updated user insert at deastination
+            let updatedUser = updateUser(destinationSection: destinationIndexPath.section, itemToBeUpdate: [item])
+            for item in updatedUser {
+                myUsers[destinationIndexPath.section].insert(item, at: destinationIndexPath.item-1)
+            }
+        }
+        
     }
     
 
@@ -132,12 +143,12 @@ class CollectionViewController: UICollectionViewController {
 
     }
     
-    func loadUsersFor(section:Int) {
-        let indexPath = IndexPath(item: 0, section: section)
+    func loadUsersFor(_ indexPath:IndexPath) {
+        let section = indexPath.section
         loadingSectionIndexPaths.append(indexPath)
         collectionView.reloadItems(at: [indexPath])
         
-        retrieveUserFor(lastUserId:  myUsers[section].last?.id) { [weak self] result in
+        retrieveUserFor(lastUserId:  myUsers[section].last?.id) { [weak self, indexPath] result in
             guard let self = self else { return }
             switch result {
             case .success(let users):
@@ -146,10 +157,8 @@ class CollectionViewController: UICollectionViewController {
             case .failure(let runtimeError):
                 print(runtimeError)
             }
-            if let index = self.loadingSectionIndexPaths.firstIndex(of: indexPath) {
-                self.loadingSectionIndexPaths.remove(at: index)
-            }
-            self.collectionView.reloadData()
+            self.loadingSectionIndexPaths.removeAll(where: { $0 == indexPath })
+            self.collectionView.reloadSections(IndexSet(integer: indexPath.section))
         }
     }
     
@@ -224,7 +233,7 @@ class CollectionViewController: UICollectionViewController {
                 newUser.setValue(user.avatar_url, forKey: "imagelink")
                 newUser.setValue(user.login, forKey: "username")
                 try context.save()
-                print("Success")
+                print("user saved to coredata successfully")
             } catch {
                 print("Error saving: \(error)")
             }
@@ -255,6 +264,44 @@ class CollectionViewController: UICollectionViewController {
     }
     
     //Update core data
+    func updateUser (destinationSection: Int, itemToBeUpdate: [User]) -> [User] {
+        deleteUsers(itemToBeUpdate)
+        saveUserData(itemToBeUpdate, section: destinationSection)
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Person")
+        
+        let predicates = itemToBeUpdate.map({ NSPredicate(format: "idtag == %d AND section == %d", $0.id, destinationSection ) })
+        fetchRequest.predicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+        do {
+            let objects = try context.fetch(fetchRequest) as! [NSManagedObject]
+            var updatedUser = [User]()
+            
+            for object in objects {
+                let section = object.value(forKey: "section") as! Int
+                let idtag = object.value(forKey: "idtag") as! Int
+                let imagePath = object.value(forKey: "imagelink") as! String
+                let username = object.value(forKey: "username") as! String
+                updatedUser.append(User(login: username,id: idtag, avatar_url: imagePath, section: section))
+            }
+            return updatedUser
+        } catch _ {
+            print("user can't fetch")
+            return []
+        }
+//        for user in itemToBeUpdate {
+//            do {
+//                let newUser = NSEntityDescription.insertNewObject(forEntityName: "Person", into: context)
+//                newUser.setValue(destinationSection, forKey: "section")
+//                newUser.setValue(user.id, forKey: "idtag")
+//                newUser.setValue(user.avatar_url, forKey: "imagelink")
+//                newUser.setValue(user.login, forKey: "username")
+//                try context.save()
+//                print("User updated successfully")
+//            } catch {
+//                print("Error saving: \(error)")
+//            }
+//        }
+    }
     //Delete from core data
     func deleteAllRecords() {
         let delegate = UIApplication.shared.delegate as! AppDelegate
@@ -271,7 +318,7 @@ class CollectionViewController: UICollectionViewController {
         }
     }
     
-    func deletUsers(_ deleteList:[User]) {
+    func deleteUsers(_ deleteList:[User]) {
         let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Person")
         
@@ -302,12 +349,11 @@ class CollectionViewController: UICollectionViewController {
     }
     @IBAction func onRightItemClick(_ sender: Any) {
         let usersToDelete = selectedItems.map({ myUsers[$0.section][$0.item-1] })
-        
         for user in usersToDelete where user.section != nil {
-            myUsers[user.section!].removeAll(where: { $0.id == user.id })
+            myUsers[user.section!].removeAll(where: { $0.id == user.id }) // myUsers[sectionOf selected cell]
         }
         
-        deletUsers(usersToDelete)
+        deleteUsers(usersToDelete)
         collectionView.performBatchUpdates {
             collectionView.deleteItems(at: selectedItems)
         } completion: { _ in
@@ -316,6 +362,7 @@ class CollectionViewController: UICollectionViewController {
             self.collectionView.reloadData()
         }
         selectedItems.removeAll()
+        selectAllSections.removeAll()
     }
     
     func refreshBarButton() {
@@ -326,6 +373,7 @@ class CollectionViewController: UICollectionViewController {
             leftBarItem.title = "Edit"
             rightBarItem.isEnabled = false
         }
+        collectionView.reloadData()
     }
     
 }
